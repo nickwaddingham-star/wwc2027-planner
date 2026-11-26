@@ -4,8 +4,9 @@ Downloaded 26 November 2026 from FIFA's media server, as shown on
 https://www.fifa.com/en/tournaments/womens/womensworldcup/brazil-2027
 
 These are website copies and may not be the approved versions. They are saved as served and not edited.
-Permission to use them was confirmed by the project owner. Get written permission and approved files
-from FIFA and each company before any public release.
+Permission to use them was confirmed by the project owner, who chose on 26 November 2026 to keep the
+prototype public. Written permission and approved files from FIFA and each company are still to be
+obtained before any official release.
 
 All addresses start with `https://digitalhub.fifa.com`.
 

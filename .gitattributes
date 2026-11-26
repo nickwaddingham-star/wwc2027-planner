@@ -1,0 +1,5 @@
+* text=auto
+
+# Keep brand files exactly as downloaded
+brand/*.png binary
+brand/*.svg binary

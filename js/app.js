@@ -3,51 +3,26 @@
   const P = WWC.planner;
   const T = WWC.t;
   const STORE = "wwc2027-trip-v1";
-  const VIEWS = ["start", "matches", "flights", "stays", "activities", "trip"];
+  const STEPS = ["start", "matches", "flights", "stays", "activities", "trip"];
+  const VIEWS = STEPS.concat("account");
+  const { fresh, whole } = WWC.trips;
 
   /* ---------- State ---------- */
 
-  const fresh = () => ({
-    home: null, adults: 2, children: 0, currency: null, matches: [], arriveBefore: 1, stayAfter: 1,
-    moveStyle: "early", flights: {}, areas: {}, roomType: "entire", interests: [], picks: {}
-  });
-
-  const whole = (v, low, high, fallback) => (Number.isFinite(v) ? Math.min(high, Math.max(low, Math.round(v))) : fallback);
-  const isDate = v => v === "" || /^\d{4}-\d{2}-\d{2}$/.test(v);
-  const plainObject = v => (v && typeof v === "object" && !Array.isArray(v) ? v : {});
-
-  /* Saved data is checked against the current content, so old or edited values can't break a screen. */
+  /* The plan being worked on. tripId links it to a saved trip, if it came from one. */
   function load() {
-    const s = fresh();
-    let saved = {};
-    try { saved = plainObject(JSON.parse(localStorage.getItem(STORE))); } catch (e) { /* storage unavailable */ }
-    if (P.home(saved.home)) s.home = saved.home;
-    s.adults = whole(saved.adults, 1, 99, s.adults);
-    s.children = whole(saved.children, 0, 99, s.children);
-    if (WWC.rates[saved.currency]) s.currency = saved.currency;
-    (Array.isArray(saved.matches) ? saved.matches : []).forEach(id => {
-      const match = WWC.matches.find(m => m.id === id);
-      if (match && !s.matches.includes(id) && !P.clash(match, s.matches)) s.matches.push(id);
-    });
-    s.arriveBefore = whole(saved.arriveBefore, 1, 7, 1);
-    s.stayAfter = whole(saved.stayAfter, 1, 14, 1);
-    if (saved.moveStyle === "late") s.moveStyle = "late";
-    if (saved.roomType === "room") s.roomType = "room";
-    Object.entries(plainObject(saved.flights)).forEach(([k, v]) => { if (typeof v === "string") s.flights[k] = v; });
-    Object.entries(plainObject(saved.areas)).forEach(([city, id]) => {
-      if ((WWC.areas[city] || []).some(a => a.id === id)) s.areas[city] = id;
-    });
-    s.interests = (Array.isArray(saved.interests) ? saved.interests : []).filter(x => T.activities.tags[x]);
-    Object.entries(plainObject(saved.picks)).forEach(([key, date]) => {
-      const [city, id] = key.split(":");
-      if ((WWC.activities[city] || []).some(a => a.id === id) && isDate(date)) s.picks[key] = date;
-    });
-    return s;
+    let saved = null;
+    try { saved = JSON.parse(localStorage.getItem(STORE)); } catch (e) { /* storage unavailable */ }
+    const plan = WWC.trips.clean(saved).plan;
+    plan.tripId = saved && typeof saved.tripId === "string" ? saved.tripId : null;
+    return plan;
   }
 
   let state = load();
   const filters = { city: "", team: "", stage: "" };
-  const ui = { confirmReset: false, copy: "" };
+  const ui = { confirmReset: false, copy: "", confirm: null, renaming: null, draft: {} };
+  /* Who is signed in and their saved trips, as last read from the account. */
+  const session = { user: null, trips: [] };
 
   function save() {
     try { localStorage.setItem(STORE, JSON.stringify(state)); } catch (e) { /* storage unavailable */ }
@@ -466,6 +441,7 @@
           <tr class="total"><th scope="row">${esc(T.trip.total)}</th><td>${esc(money(totals.total))}</td></tr>
         </tbody></table>
         <p>${esc(T.trip.perPerson(money(totals.total / guests())))}</p><p class="hint">${esc(T.trip.excludes)}</p></section>
+      ${savePanel()}
       ${bookingSection(stops, legs, plan)}
       <section><h2>${esc(T.trip.days)}</h2><ol class="timeline">${days.map(d =>
         `<li><h3>${esc(dayLong(d.date))}</h3><ul>${d.lines.map(l => `<li class="line-${l.type}">${esc(l.text)}</li>`).join("")}</ul></li>`).join("")}</ol></section>
@@ -478,6 +454,243 @@
         <span role="status">${esc(ui.copy === "ok" ? T.trip.copied : ui.copy ? T.trip.copyFailed : "")}</span>
       </div>
       ${ui.copy === "failed" ? `<textarea class="copytext" rows="12" readonly aria-label="${esc(T.trip.title)}">${esc(tripText(days, totals))}</textarea>` : ""}`;
+  }
+
+  /* ---------- Sign-in and saved trips ---------- */
+
+  const A = T.account;
+  const savedWhen = new Intl.DateTimeFormat(T.locale, { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  const openTrip = () => session.trips.find(t => t.id === state.tripId) || null;
+
+  /* True when leaving the current plan would lose something. */
+  function unsaved() {
+    if (!state.matches.length) return false;
+    const trip = openTrip();
+    return !trip || !WWC.trips.same(trip.data, state);
+  }
+
+  const planCities = plan => Array.from(new Set(P.stops(plan.matches, { homeId: plan.home }).map(s => WWC.cities[s.city].name)));
+
+  const button = (action, label, cls, id, name) =>
+    `<button type="button" class="${cls || "toggle"}" data-action="${action}"${id ? ` data-id="${esc(id)}"` : ""} data-focus="${action}${id ? "-" + esc(id) : ""}">${esc(label)}${name ? `<span class="sr">: ${esc(name)}</span>` : ""}</button>`;
+
+  function nameForm(kind, label, value, submit, id) {
+    const field = `${kind}-name`;
+    return `<form class="nameform" data-form="${kind}"${id ? ` data-id="${esc(id)}"` : ""}>
+      <label class="field" for="${field}"><span>${esc(label)}</span><input id="${field}" data-draft="${kind}" maxlength="60" autocomplete="off" value="${esc(value)}"></label>
+      <button type="submit" class="button" data-focus="submit-${kind}">${esc(submit)}</button></form>`;
+  }
+
+  function confirmBox(question, yes, no) {
+    return `<div class="confirm" role="group" aria-label="${esc(question)}"><p>${esc(question)}</p>${button("confirm-yes", yes, "button")} ${button("confirm-no", no)}</div>`;
+  }
+
+  /* Saving the current plan, shown on "Your trip" and "My trips". */
+  function savePanel() {
+    if (!session.user) {
+      return `<section class="panel save"><h2>${esc(A.saveTitle)}</h2><p>${esc(A.signInToSave)}</p><p><a class="button" href="#account">${esc(A.linkOut)}</a></p></section>`;
+    }
+    const trip = openTrip();
+    const suggestion = ui.draft.save !== undefined ? ui.draft.save : A.defaultName(planCities(state));
+    let body;
+    if (!state.matches.length && !trip) body = `<p>${esc(A.needMatch)}</p>`;
+    else if (trip) {
+      const dirty = !WWC.trips.same(trip.data, state);
+      body = `<p>${esc(A.linked(trip.name))} <strong>${esc(dirty ? A.dirty : A.upToDate)}</strong></p>
+        ${dirty && state.matches.length ? `<p>${button("update", A.saveChanges, "button")}</p>` : ""}
+        ${state.matches.length ? nameForm("save", A.tripName, suggestion, A.saveNew) : `<p>${esc(A.needMatch)}</p>`}`;
+    } else body = `<p>${esc(A.unsaved)}</p>${nameForm("save", A.tripName, suggestion, A.save)}`;
+    return `<section class="panel save"><h2>${esc(A.saveTitle)}</h2>${body}</section>`;
+  }
+
+  function tripCard(trip) {
+    const { plan, missing } = WWC.trips.clean(trip.data);
+    const stops = P.stops(plan.matches, { homeId: plan.home, arriveBefore: plan.arriveBefore, stayAfter: plan.stayAfter, moveStyle: plan.moveStyle });
+    const summary = stops.length
+      ? `${A.dates(day(stops[0].arrive), day(stops[stops.length - 1].depart))} · ${planCities(plan).join(", ")} · ${T.plural(plan.matches.length, "match", "matches")}`
+      : A.noMatches;
+    const when = new Date(trip.saved);
+    const confirming = ui.confirm && ui.confirm.id === trip.id;
+    let actions;
+    if (ui.renaming === trip.id) {
+      actions = nameForm("rename", A.newName, ui.draft.rename !== undefined ? ui.draft.rename : trip.name, A.saveName, trip.id) + button("rename-cancel", A.cancel, "toggle", trip.id);
+    } else if (confirming && ui.confirm.type === "delete") actions = confirmBox(A.askDelete(trip.name), A.yesDelete, A.keep);
+    else if (confirming && ui.confirm.type === "open") actions = confirmBox(A.askDiscard, A.discard, A.back);
+    else {
+      actions = `${button("open", A.open, "button", trip.id, trip.name)} ${button("rename", A.rename, "toggle", trip.id, trip.name)} ${button("delete", A.remove, "toggle", trip.id, trip.name)}`;
+    }
+    return `<li class="savedtrip${trip.id === state.tripId ? " current" : ""}">
+      <h3>${esc(trip.name)}${trip.id === state.tripId ? ` <span class="badge best">${esc(A.openNow)}</span>` : ""}</h3>
+      <p>${esc(summary)}</p>
+      ${isNaN(when) ? "" : `<p class="hint">${esc(A.savedAt(savedWhen.format(when)))}</p>`}
+      ${missing ? `<p class="warn">${esc(A.missing(missing))}</p>` : ""}
+      <div class="actions">${actions}</div></li>`;
+  }
+
+  function viewAccount() {
+    if (!session.user) {
+      return `${heading(A.signInTitle, A.signInLead)}
+        <p class="callout">${esc(A.demo)}</p>
+        <div class="panel">
+          <form data-form="signin">
+            <label class="field wide" for="signin-name"><span>${esc(A.nameLabel)}</span><input id="signin-name" data-draft="signin" maxlength="40" autocomplete="off" aria-describedby="signin-help" value="${esc(ui.draft.signin || "")}"></label>
+            <p id="signin-help" class="hint">${esc(A.nameHelp)}</p>
+            <button type="submit" class="button" data-focus="submit-signin">${esc(A.signIn)}</button>
+          </form>
+        </div>
+        <p class="hint">${esc(A.privacy)}</p>`;
+    }
+    const asking = ui.confirm && (ui.confirm.type === "new" || ui.confirm.type === "signout");
+    return `${heading(A.title)}
+      <p>${esc(A.signedInAs(session.user.name))}</p>
+      ${asking ? confirmBox(A.askDiscard, A.discard, A.back)
+        : `<div class="actions toolbar">${button("new-trip", A.newTrip)} ${button("signout", A.signOut)}</div>`}
+      ${unsaved() ? savePanel() : ""}
+      <section><h2>${esc(A.list)}</h2>
+        ${session.trips.length ? `<ul class="savedtrips">${session.trips.map(tripCard).join("")}</ul>` : `<div class="empty"><p>${esc(A.none)}</p></div>`}
+      </section>
+      <p class="fine">${esc(A.demo)} ${esc(A.privacy)}</p>`;
+  }
+
+  function accountLink() {
+    el("account").innerHTML = `<a href="#account"${currentView() === "account" ? ' aria-current="page"' : ""}>${esc(session.user ? A.linkIn(session.user.name) : A.linkOut)}</a>`;
+  }
+
+  /* A message that stays until the visitor moves to another screen. */
+  function say(text, isError) {
+    const box = el("flash");
+    box.textContent = text;
+    box.classList.toggle("error", !!isError);
+  }
+
+  async function refresh() {
+    session.user = await WWC.account.user();
+    session.trips = await WWC.account.list();
+  }
+
+  /* Run an account change, re-read the account, then redraw. Reports any failure on screen. */
+  async function change(work, focus) {
+    try {
+      const message = await work();
+      await refresh();
+      render(false);
+      say(message || "");
+    } catch (error) {
+      await refresh();
+      render(false);
+      say(A.errors[error.code] || A.errors.storage, true);
+      return;
+    }
+    const target = focus && document.querySelector(focus);
+    if (target) target.focus();
+  }
+
+  const HEADING = "#main h1";
+
+  function startNewPlan() {
+    state = Object.assign(fresh(), { tripId: null });
+    save();
+  }
+
+  /* Move to a screen and show a message once it has been drawn. */
+  let pendingMessage = "";
+  function go(view, message) {
+    pendingMessage = message || "";
+    if (currentView() === view) { render(true); say(pendingMessage); pendingMessage = ""; } else location.hash = view;
+  }
+
+  function loadTrip(id) {
+    const trip = session.trips.find(t => t.id === id);
+    if (!trip) return change(async () => A.errors.missing, HEADING);
+    const { plan, missing } = WWC.trips.clean(trip.data);
+    state = Object.assign(plan, { tripId: trip.id });
+    save();
+    go("trip", [A.opened(trip.name), missing ? A.missing(missing) : ""].join(" ").trim());
+  }
+
+  function signOut() {
+    return change(async () => {
+      await WWC.account.signOut();
+      startNewPlan();
+      return A.signedOut;
+    }, HEADING);
+  }
+
+  function accountAction(action, id) {
+    const focusOn = selector => { const target = document.querySelector(selector); if (target) target.focus(); };
+    const ask = (type, tripId) => { ui.confirm = { type, id: tripId }; ui.renaming = null; render(false); focusOn('[data-focus="confirm-no"]'); };
+
+    if (action === "update") {
+      return change(async () => {
+        await WWC.account.update(state.tripId, WWC.trips.forStorage(state));
+        return A.updated;
+      }, HEADING);
+    }
+    if (action === "open") return unsaved() ? ask("open", id) : loadTrip(id);
+    if (action === "delete") return ask("delete", id);
+    if (action === "new-trip") {
+      if (unsaved()) return ask("new");
+      startNewPlan();
+      return go("start");
+    }
+    if (action === "signout") return unsaved() ? ask("signout") : signOut();
+    if (action === "rename") {
+      ui.renaming = id; ui.confirm = null; delete ui.draft.rename;
+      render(false);
+      return focusOn("#rename-name");
+    }
+    if (action === "rename-cancel") {
+      ui.renaming = null;
+      render(false);
+      return focusOn(`[data-focus="rename-${CSS.escape(id)}"]`);
+    }
+    if (action === "confirm-no") {
+      const { type, id: tripId } = ui.confirm;
+      const back = { open: `open-${tripId}`, delete: `delete-${tripId}`, new: "new-trip", signout: "signout" }[type];
+      ui.confirm = null;
+      render(false);
+      return focusOn(`[data-focus="${CSS.escape(back)}"]`);
+    }
+    if (action === "confirm-yes") {
+      const { type, id: tripId } = ui.confirm;
+      ui.confirm = null;
+      if (type === "open") return loadTrip(tripId);
+      if (type === "new") { startNewPlan(); return go("start"); }
+      if (type === "signout") return signOut();
+      return change(async () => {
+        await WWC.account.remove(tripId);
+        if (state.tripId === tripId) { state.tripId = null; save(); }
+        return A.deleted;
+      }, HEADING);
+    }
+  }
+
+  function submitForm(kind, id) {
+    const text = el(`${kind}-name`).value;
+    if (kind === "signin") {
+      return change(async () => {
+        const user = await WWC.account.signIn(text);
+        delete ui.draft.signin;
+        /* A plan linked to someone else's saved trip becomes an unsaved plan. */
+        if (state.tripId && !(await WWC.account.list()).some(t => t.id === state.tripId)) { state.tripId = null; save(); }
+        return A.signedInAs(user.name);
+      }, HEADING);
+    }
+    if (kind === "save") {
+      return change(async () => {
+        const trip = await WWC.account.save(text, WWC.trips.forStorage(state));
+        state.tripId = trip.id;
+        delete ui.draft.save;
+        save();
+        return A.saved;
+      }, HEADING);
+    }
+    return change(async () => {
+      await WWC.account.rename(id, text);
+      ui.renaming = null;
+      delete ui.draft.rename;
+      return A.renamed;
+    }, HEADING);
   }
 
   /* ---------- Route map and summary ---------- */
@@ -544,16 +757,16 @@
 
   /* ---------- Rendering and events ---------- */
 
-  const views = { start: viewStart, matches: viewMatches, flights: viewFlights, stays: viewStays, activities: viewActivities, trip: viewTrip };
+  const views = { start: viewStart, matches: viewMatches, flights: viewFlights, stays: viewStays, activities: viewActivities, trip: viewTrip, account: viewAccount };
   const currentView = () => (VIEWS.includes(location.hash.slice(1)) ? location.hash.slice(1) : "start");
   const el = id => document.getElementById(id);
 
   function renderNav(view) {
-    el("steps").innerHTML = VIEWS.map((v, i) =>
+    el("steps").innerHTML = STEPS.map((v, i) =>
       `<li><a href="#${v}"${v === view ? ' aria-current="step"' : ""}><span class="n">${i + 1}</span>${esc(T.steps[v])}</a></li>`).join("");
     /* On narrow screens, keep the current step in sight. */
     const list = el("steps"), current = list.querySelector("[aria-current]");
-    list.scrollLeft = current.offsetLeft - (list.clientWidth - current.offsetWidth) / 2;
+    if (current) list.scrollLeft = current.offsetLeft - (list.clientWidth - current.offsetWidth) / 2;
   }
 
   function render(moved) {
@@ -561,6 +774,7 @@
     const active = document.activeElement;
     const focusKey = active && (active.dataset.focus || active.id);
     renderNav(view);
+    accountLink();
     el("main").innerHTML = views[view]();
     el("side").innerHTML = side();
     document.title = `${T.steps[view]} · ${T.tournament} ${T.siteName}`;
@@ -610,8 +824,17 @@
     if (target.dataset.pick) { state.picks[target.dataset.pick] = target.value; return commit(); }
   });
 
+  document.addEventListener("submit", event => {
+    const form = event.target.closest("[data-form]");
+    if (!form) return;
+    event.preventDefault();
+    submitForm(form.dataset.form, form.dataset.id);
+  });
+
   /* Pick up a home city as soon as the text matches one. */
   document.addEventListener("input", event => {
+    /* Keep half-typed names if the screen is redrawn. */
+    if (event.target.dataset.draft) { ui.draft[event.target.dataset.draft] = event.target.value; return; }
     if (event.target.id !== "home") return;
     const wanted = event.target.value.trim().toLowerCase();
     if (WWC.homes.some(h => homeLabel(h).toLowerCase() === wanted)) chooseHome(event.target.value);
@@ -638,7 +861,10 @@
     }
     if (action === "reset") { ui.confirmReset = true; render(false); return document.querySelector('[data-focus="reset-no"]').focus(); }
     if (action === "reset-no") { ui.confirmReset = false; render(false); return document.querySelector('[data-focus="reset"]').focus(); }
-    if (action === "reset-yes") { ui.confirmReset = false; state = fresh(); save(); location.hash = "start"; return; }
+    if (action === "reset-yes") { ui.confirmReset = false; startNewPlan(); location.hash = "start"; return; }
+    if (["update", "open", "delete", "new-trip", "signout", "rename", "rename-cancel", "confirm-yes", "confirm-no"].includes(action)) {
+      return accountAction(action, id);
+    }
     if (action === "copy") {
       const stops = trip(), legs = journeys(stops), plan = P.schedule(stops, state.picks);
       const text = tripText(itinerary(stops, legs, plan), budget(stops, legs, plan));
@@ -650,9 +876,14 @@
 
   window.addEventListener("hashchange", () => {
     if (location.hash === "#main") return;
-    ui.copy = ""; ui.confirmReset = false;
+    ui.copy = ""; ui.confirmReset = false; ui.confirm = null; ui.renaming = null; ui.draft = {};
     render(true);
+    say(pendingMessage);
+    pendingMessage = "";
   });
+
+  /* Another tab may have signed in, signed out or changed saved trips. */
+  window.addEventListener("storage", () => refresh().then(() => render(false)));
 
   document.querySelector(".skip").addEventListener("click", event => {
     event.preventDefault();
@@ -668,5 +899,5 @@
   el("footer").textContent = T.footer;
   document.querySelector(".skip").textContent = T.skip;
   el("steps").setAttribute("aria-label", T.stepsLabel);
-  render(false);
+  refresh().catch(() => say(A.errors.storage, true)).then(() => render(false));
 })();

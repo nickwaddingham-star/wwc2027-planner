@@ -2,14 +2,9 @@
 (function () {
   const P = WWC.planner;
   const results = [];
-  function test(name, fn) {
-    try {
-      const problem = fn();
-      results.push({ name, ok: !problem, problem });
-    } catch (error) {
-      results.push({ name, ok: false, problem: error.message });
-    }
-  }
+  const queue = [];
+  /* A test returns an empty string when it passes. It may be async. */
+  const test = (name, fn) => queue.push({ name, fn });
   const check = (condition, message) => (condition ? "" : message);
   const find = (a, b) => WWC.matches.find(m => m.a === a && m.b === b);
   const id = (a, b) => find(a, b).id;
@@ -253,14 +248,119 @@
     return check(url.includes("/LHR.AIRPORT-GRU.AIRPORT/") && url.includes("depart=2027-06-22") && url.includes("adults=9"), url);
   });
 
-  const passed = results.filter(r => r.ok).length;
-  WWC.testResults = { passed, total: results.length, failures: results.filter(r => !r.ok) };
-  document.getElementById("summary").textContent = `${passed} of ${results.length} tests passed`;
-  const list = document.getElementById("results");
-  results.forEach(r => {
-    const li = document.createElement("li");
-    li.className = r.ok ? "pass" : "fail";
-    li.textContent = (r.ok ? "Pass: " : "FAIL: ") + r.name + (r.problem ? " (" + r.problem + ")" : "");
-    list.appendChild(li);
+  /* ---------- Saved trips and the demo account ---------- */
+  const memory = (initial) => {
+    const items = Object.assign({}, initial);
+    return { items, getItem: k => (k in items ? items[k] : null), setItem: (k, v) => { items[k] = String(v); }, removeItem: k => { delete items[k]; } };
+  };
+  const rejects = async (promise, code) => { try { await promise; return false; } catch (e) { return e.code === code; } };
+  const samplePlan = () => Object.assign(WWC.trips.fresh(), {
+    home: homeId("LHR"), adults: 3, matches: [id("Brazil", "New Zealand"), id("Brazil", "South Africa")],
+    picks: { "RIO:christ": "" }, areas: { RIO: "botafogo" }, interests: ["food", "beach"]
   });
+
+  test("A stored trip keeps the choices and reopens the same", () => {
+    const plan = samplePlan();
+    const stored = JSON.parse(JSON.stringify(WWC.trips.forStorage(plan)));
+    const back = WWC.trips.clean(stored);
+    return check(back.missing === 0 && WWC.trips.same(back.plan, plan) && !("tripId" in stored), JSON.stringify(back));
+  });
+
+  test("The order choices were made in doesn't count as a change", () => {
+    const a = samplePlan(), b = samplePlan();
+    b.matches.reverse(); b.interests.reverse();
+    const c = samplePlan(); c.adults = 4;
+    return check(WWC.trips.same(a, b) && !WWC.trips.same(a, c), "comparison wrong");
+  });
+
+  test("Removed or changed matches and activities are left out and counted", () => {
+    const stored = WWC.trips.forStorage(samplePlan());
+    stored.matchInfo[stored.matches[0]] = "2027-06-24|RIO|Brazil|Someone else";
+    stored.matches.push("m999");
+    stored.picks["RIO:gone"] = "";
+    const back = WWC.trips.clean(stored);
+    return check(back.missing === 3 && back.plan.matches.length === 1, JSON.stringify(back));
+  });
+
+  test("Damaged trip data gives a usable empty plan", () => {
+    const bad = [null, "text", [], { matches: "m1", adults: "x", home: 5, picks: [], areas: null }];
+    return check(bad.every(d => { const p = WWC.trips.clean(d).plan; return p.adults === 2 && p.matches.length === 0 && p.home === null; }), "not safe");
+  });
+
+  test("Sign in needs a name; no one is signed in to start", async () => {
+    const account = WWC.createAccount(memory());
+    const nobody = (await account.user()) === null;
+    return check(nobody && await rejects(account.signIn("   "), "name") && await rejects(account.signIn("x".repeat(41)), "name") &&
+      await rejects(account.save("Trip", {}), "signedOut"), "accepted bad input");
+  });
+
+  test("Several trips can be saved, updated, renamed and deleted", async () => {
+    const account = WWC.createAccount(memory());
+    await account.signIn("Sam");
+    const first = await account.save("Rio", { adults: 1 });
+    const second = await account.save("North east", { adults: 2 });
+    await account.update(first.id, { adults: 5 });
+    await account.rename(second.id, "Recife");
+    let list = await account.list();
+    const changed = list.length === 2 && list.find(t => t.id === first.id).data.adults === 5 && list.find(t => t.id === second.id).name === "Recife";
+    await account.remove(first.id);
+    list = await account.list();
+    return check(changed && list.length === 1 && list[0].id === second.id && await rejects(account.remove(first.id), "missing") &&
+      await rejects(account.rename(second.id, " "), "name"), JSON.stringify(list));
+  });
+
+  test("Trips survive signing out and stay separate for each name", async () => {
+    const store = memory();
+    const account = WWC.createAccount(store);
+    await account.signIn("Sam");
+    await account.save("Sam's trip", {});
+    await account.signOut();
+    const hidden = (await account.list()).length === 0;
+    await account.signIn("Alex");
+    const separate = (await account.list()).length === 0;
+    await account.signIn("  sam ");
+    const again = await WWC.createAccount(store).list();
+    return check(hidden && separate && again.length === 1 && (await account.user()).name === "Sam", JSON.stringify(again));
+  });
+
+  test("Odd names are treated as ordinary names", async () => {
+    const account = WWC.createAccount(memory());
+    await account.signIn("__proto__");
+    await account.save("One", {});
+    return check((await account.list()).length === 1 && ({}).trips === undefined, "name not isolated");
+  });
+
+  test("Damaged account storage doesn't break sign-in", async () => {
+    const account = WWC.createAccount(memory({ "wwc2027-accounts-v1": "{oops", "wwc2027-session-v1": "42" }));
+    const before = (await account.user()) === null && (await account.list()).length === 0;
+    await account.signIn("Sam");
+    return check(before && (await account.user()).name === "Sam", "not recovered");
+  });
+
+  test("A browser that refuses to save reports it", async () => {
+    const store = memory();
+    store.setItem = () => { throw new Error("full"); };
+    return check(await rejects(WWC.createAccount(store).signIn("Sam"), "storage"), "no error");
+  });
+
+  (async function run() {
+    for (const { name, fn } of queue) {
+      try {
+        const problem = await fn();
+        results.push({ name, ok: !problem, problem });
+      } catch (error) {
+        results.push({ name, ok: false, problem: error.message });
+      }
+    }
+    const passed = results.filter(r => r.ok).length;
+    WWC.testResults = { passed, total: results.length, failures: results.filter(r => !r.ok) };
+    document.getElementById("summary").textContent = `${passed} of ${results.length} tests passed`;
+    const list = document.getElementById("results");
+    results.forEach(r => {
+      const li = document.createElement("li");
+      li.className = r.ok ? "pass" : "fail";
+      li.textContent = (r.ok ? "Pass: " : "FAIL: ") + r.name + (r.problem ? " (" + r.problem + ")" : "");
+      list.appendChild(li);
+    });
+  })();
 })();

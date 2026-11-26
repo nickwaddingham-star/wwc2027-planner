@@ -76,7 +76,22 @@ img.logo-airbnb { height: 34px; }
 
 /* Layout */
 .layout { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 28px; padding-block: 26px 40px; align-items: start; }
-main { min-width: 0; }
+main, .column { min-width: 0; }
+.topright { display: flex; align-items: center; justify-content: flex-end; gap: 12px; min-width: 0; }
+.topright a { color: var(--white); font-weight: 600; font-size: .85rem; overflow-wrap: anywhere; text-align: right; }
+.flash { background: var(--pitch); color: var(--white); border-radius: 8px; padding: 10px 14px; font-weight: 600; }
+.flash.error { background: var(--warn); }
+.flash:empty { padding: 0; margin: 0; }
+.nameform { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; }
+.nameform .field { flex: 1 1 220px; max-width: 420px; }
+.save p:last-child { margin-bottom: 0; }
+.toolbar { margin-bottom: 20px; }
+.savedtrips { display: grid; gap: 12px; }
+.savedtrip { background: var(--surface); border: 1.5px solid var(--line); border-radius: 10px; padding: 14px; overflow-wrap: anywhere; }
+.savedtrip.current { border-color: var(--accent); }
+.savedtrip .nameform { flex: 1 1 100%; }
+.confirm { background: var(--warn-soft); border-radius: 8px; padding: 10px 14px; flex: 1 1 100%; margin-bottom: 12px; }
+.savedtrip .confirm { margin-bottom: 0; }
 main:focus { outline: none; }
 aside { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 16px; position: sticky; top: 64px; max-height: calc(100vh - 80px); overflow-y: auto; }
 section { margin-bottom: 28px; }

@@ -201,6 +201,7 @@ window.WWC = window.WWC || {};
     side: {
       title: "Your route",
       map: "Map of Brazil showing the eight host cities and your route",
+      country: "Brazil",
       matches: "Matches",
       cities: "Stops",
       nights: "Nights",

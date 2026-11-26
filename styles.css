@@ -209,6 +209,13 @@ img.hero-emblem { height: 96px; }
 .map .name { font-size: 12px; paint-order: stroke; stroke: var(--white); stroke-width: 3px; }
 .map .on .name { font-weight: 700; }
 .map .order { fill: var(--white); font-size: 10px; font-weight: 700; text-anchor: middle; }
+/* Brazil flag and label. The flag keeps its national colours whatever the theme. */
+.map .flag-field { fill: #009c3b; }
+.map .flag-rhombus { fill: #ffdf00; }
+.map .flag-globe { fill: #002776; stroke: none; }
+.map .flag-band { fill: none; stroke: #ffffff; stroke-width: 5; }
+.map .flag-star { fill: #ffffff; stroke: none; }
+.map .country-name { font-family: var(--heading-font); font-size: 22px; font-weight: 600; }
 .stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0; }
 .stats div { background: var(--accent-soft); border-radius: 8px; padding: 8px 10px; }
 .stats dt { font-size: .75rem; color: var(--muted); }

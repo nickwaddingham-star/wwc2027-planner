@@ -22,6 +22,8 @@ Fans pick matches, and those set their cities, dates, flights, stays and free ti
 | FIFA Approved activities | Promoted: labelled and listed first. A sample list, marked "Example", until FIFA's API exists |
 | Booking from "Your trip" | Flights on Booking.com (Qatar choices also link to Qatar Airways), accommodation on Airbnb, activities on their own websites |
 | Saved trips | Signed-in visitors save and retrieve several trips. Demo sign-in first, FIFA ID later |
+| Design | FIFA.com style across the whole site ("Option B", chosen 26 November 2026), without story circles. The route map stays beside planning screens |
+| Navigation | The same two-level bar as FIFA's tournament pages, linking to FIFA's own pages. The planning steps sit under the countdown, starting with "Start Trip" |
 
 ## FIFA Approved activities (future)
 

@@ -6,19 +6,32 @@
   <title>FIFA Women’s World Cup Brazil 2027™ Trip Planner (prototype)</title>
   <meta name="robots" content="noindex">
   <link rel="icon" href="data:,">
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&family=Poppins:wght@500;600&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap">
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
-  <header>
-    <div class="topbar"><div class="wrap"><span id="brand-fifa"></span><span class="topright"><span id="account"></span><span class="prototype" id="prototype"></span></span></div></div>
-    <div class="eventbar"><div class="wrap"><span id="brand-emblem"></span><span><strong id="tournament"></strong><small id="sitename"></small></span></div></div>
-    <div class="pattern" aria-hidden="true"></div>
-    <div class="notice"><div class="wrap" id="notice"></div></div>
+  <!-- The two-level bar follows the one on fifa.com's tournament pages. -->
+  <header class="siteheader">
+    <div class="topbar"><div class="wrap">
+      <span id="brand-fifa"></span>
+      <div class="topright">
+        <nav class="fifalinks" id="fifa-links"></nav>
+        <span class="lang" id="language"></span>
+        <span id="search"></span>
+        <span id="account"></span>
+        <span class="prototype" id="prototype"></span>
+      </div>
+    </div></div>
+    <div class="eventbar"><div class="wrap">
+      <span id="brand-event"></span>
+      <nav class="eventnav" id="event-nav"></nav>
+    </div></div>
   </header>
+  <section class="countdown" id="countdown"></section>
   <nav class="steps"><div class="wrap"><ol id="steps"></ol></div></nav>
-  <div class="wrap layout">
+  <div class="notice"><div class="wrap" id="notice"></div></div>
+  <div class="wrap layout" id="layout">
     <div class="column">
       <p id="flash" class="flash" role="status"></p>
       <main id="main" tabindex="-1"></main>

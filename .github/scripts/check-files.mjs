@@ -39,6 +39,7 @@ for (const page of files.filter(f => /^[^/]+\.html$/.test(f))) {
   }
 }
 for (const [, path] of readFileSync("js/brand.js", "utf8").matchAll(/"(brand\/[^"]+)"/g)) referenced.add(path);
+for (const [, name] of readFileSync("js/images.js", "utf8").matchAll(/photo\("([^"]+\.jpg)"/g)) referenced.add("img/activities/" + name);
 
 for (const path of referenced) {
   if (!existsSync(path) || !files.includes(path)) problems.push(`${path}: referred to but not in the repository`);

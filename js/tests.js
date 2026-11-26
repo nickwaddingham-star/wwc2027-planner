@@ -243,6 +243,13 @@
     return check(!cities.length && !noSite.length, cities.concat(noSite).join(", "));
   });
 
+  test("Every activity photo has a real activity, a description, a credit and a licence", () => {
+    const keys = activityKeys();
+    const bad = Object.entries(WWC.activityPhotos).filter(([key, p]) => !keys.includes(key) || !p.alt || !p.author || !p.licence ||
+      !p.licenceUrl.startsWith("https://") || !p.source.startsWith("https://commons.wikimedia.org/")).map(([key]) => key);
+    return check(!bad.length, bad.join(", "));
+  });
+
   test("Booking.com flight link carries route, date and adults", () => {
     const url = P.links.bookingFlights("LHR", "GRU", "2027-06-22", 12);
     return check(url.includes("/LHR.AIRPORT-GRU.AIRPORT/") && url.includes("depart=2027-06-22") && url.includes("adults=9"), url);

@@ -95,6 +95,17 @@
   const approvedBadge = () =>
     `<span class="badge approved-badge">${esc(T.activities.approved)}${WWC.approved.sample ? `<small>${esc(T.activities.approvedSample)}</small>` : ""}</span>`;
 
+  const outside = (href, label) =>
+    `<a href="${esc(href)}" target="_blank" rel="noopener noreferrer">${esc(label)}<span class="sr"> (${esc(T.newTab)})</span></a>`;
+
+  /* An activity's photo with its credit, or nothing if it has no photo. */
+  function activityPhoto(key, overlay) {
+    const p = WWC.activityPhotos[key];
+    if (!p) return "";
+    return `<figure class="photo"><div class="frame"><img src="${esc(p.file)}" alt="${esc(p.alt)}" loading="lazy">${overlay || ""}</div>
+      <figcaption>${esc(T.activities.photoBy)} ${outside(p.source, p.author)}, ${outside(p.licenceUrl, p.licence)}, ${esc(T.activities.cropped)}</figcaption></figure>`;
+  }
+
   const nextButton = (view, label) => `<p class="next"><a class="button" href="#${view}">${esc(label)}</a></p>`;
   const heading = (title, lead) => `<h1 tabindex="-1">${esc(title)}</h1>${lead ? `<p class="lead">${esc(lead)}</p>` : ""}`;
 
@@ -327,6 +338,7 @@
             };
             const site = WWC.activitySites[id];
             return `<li class="activity${added ? " chosen" : ""}${isApproved(id) ? " approved" : ""}${state.interests.length && matchesInterest(a) ? " liked" : ""}">
+              ${activityPhoto(id)}
               ${isApproved(id) ? approvedBadge() : ""}
               <h3>${esc(a.name)}</h3>
               <p class="tags">${a.tags.map(t => `<span>${esc(T.activities.tags[t])}</span>`).join("")}</p>
@@ -458,7 +470,8 @@
       .map(([key, p], index) => {
         const site = WWC.activitySites[key];
         const city = WWC.cities[p.city].name;
-        return `<li>${art(index + 1, isApproved(key) ? approvedBadge() : "")}
+        const badge = isApproved(key) ? approvedBadge() : "";
+        return `<li>${activityPhoto(key, badge) || art(index + 1, badge)}
           <span class="when">${esc(`${day(p.date)}, ${city}`)}</span>
           <span class="title">${esc(p.item.name)}</span>
           <span>${esc(T.activities.cost(p.item.cost ? money(p.item.cost) : ""))}</span>

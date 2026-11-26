@@ -141,6 +141,7 @@ window.WWC = window.WWC || {};
         await page.go(view);
         assert(page.text("#main h1").length > 3, `${view} has no heading`);
         noBrokenText(page, view);
+        page.all("img").forEach(i => (i.loading = "eager")); /* load photos further down too */
         const broken = page.all("img").filter(i => !(i.complete && i.naturalWidth > 0)).map(i => i.getAttribute("src"));
         if (broken.length) await until(() => page.all("img").every(i => i.complete && i.naturalWidth > 0), `images on ${view}: ${broken.join(", ")}`);
       }
@@ -271,6 +272,23 @@ window.WWC = window.WWC || {};
     return "";
   });
 
+  test("Every activity photo shows its credit and licence", async () => {
+    const page = await open({ view: "activities", plan: await typicalPlan() });
+    for (const view of ["activities", "trip"]) {
+      await page.go(view);
+      const photos = page.all("#main .photo");
+      assert(photos.length, "no activity photo on " + view);
+      photos.forEach(figure => {
+        const photo = Object.values(page.win.WWC.activityPhotos).find(p => p.file === figure.querySelector("img").getAttribute("src"));
+        const links = Array.from(figure.querySelectorAll("figcaption a")).map(a => a.getAttribute("href"));
+        assert(photo && figure.querySelector("img").alt, "photo without a description on " + view);
+        assert(figure.textContent.includes(photo.author) && figure.textContent.includes(photo.licence) &&
+          links.includes(photo.source) && links.includes(photo.licenceUrl), "credit incomplete for " + photo.file);
+      });
+    }
+    return "";
+  });
+
   /* ---------- 5. Safety ---------- */
 
   test("Names containing code show as plain text", async () => {
@@ -310,7 +328,8 @@ window.WWC = window.WWC || {};
     const local = page.all("script[src], link[rel=stylesheet][href]")
       .map(e => e.getAttribute("src") || e.getAttribute("href"))
       .filter(path => !/^(https?:|data:)/.test(path));
-    const files = local.concat(Object.values(page.win.WWC.brand).filter(Boolean));
+    const files = local.concat(Object.values(page.win.WWC.brand).filter(Boolean),
+      Object.values(page.win.WWC.activityPhotos).map(p => p.file));
     assert(files.length > 10, "too few files found: " + files.length);
     const missing = [];
     for (const file of files) {

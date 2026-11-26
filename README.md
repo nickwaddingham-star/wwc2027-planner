@@ -46,6 +46,7 @@ To connect FIFA ID later, replace `js/account.js` with a version offering the sa
 | Airports, routes, home cities | `js/airports.js` |
 | Screen text | `js/strings.js` |
 | Logo files | `js/brand.js` |
+| Activity photos and their credits | `js/images.js` and `img/activities/` |
 | Sign-in and trip storage | `js/account.js` |
 | What a saved trip contains and how it is checked | `js/trips.js` |
 | FIFA Approved list and activity websites | `js/approved.js` |

@@ -482,6 +482,25 @@
 
   /* ---------- Route map and summary ---------- */
 
+  /*
+   * Simplified Brazil flag with the country name, placed in the empty corner of the map.
+   * Drawn on the flag's own 20 by 14 grid; the motto and most stars are too small to show here.
+   */
+  function flagAndLabel() {
+    const stars = [[88, 78], [97, 90], [108, 84], [115, 94], [100, 100], [84, 92], [120, 80], [106, 52]];
+    return `<g class="country">
+      <g class="flag" transform="translate(22 292) scale(0.5)">
+        <clipPath id="flag-globe"><circle cx="100" cy="70" r="35"></circle></clipPath>
+        <rect class="flag-field" width="200" height="140"></rect>
+        <polygon class="flag-rhombus" points="17,70 100,17 183,70 100,123"></polygon>
+        <circle class="flag-globe" cx="100" cy="70" r="35"></circle>
+        <circle class="flag-band" cx="80" cy="140" r="82.5" clip-path="url(#flag-globe)"></circle>
+        ${stars.map(([cx, cy]) => `<circle class="flag-star" cx="${cx}" cy="${cy}" r="1.8"></circle>`).join("")}
+      </g>
+      <text class="country-name" x="72" y="390" text-anchor="middle">${esc(T.side.country)}</text>
+    </g>`;
+  }
+
   function map(stops) {
     const x = lon => ((lon + 75) * 10).toFixed(1);
     const y = lat => ((6 - lat) * 10).toFixed(1);
@@ -494,6 +513,7 @@
     stops.forEach((s, i) => (visits[s.city] = visits[s.city] || []).push(i + 1));
     return `<svg class="map" viewBox="0 0 420 405" role="img" aria-label="${esc(T.side.map)}">
       <polygon class="land" points="${WWC.outline.map(([lon, lat]) => `${x(lon)},${y(lat)}`).join(" ")}"></polygon>
+      ${flagAndLabel()}
       ${stops.length > 1 ? `<polyline class="path" points="${stops.map(s => at(s.city)).join(" ")}"></polyline>` : ""}
       ${Object.entries(WWC.cities).map(([key, c]) => {
         const [dx, dy, anchor] = labels[key];

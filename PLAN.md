@@ -4,7 +4,7 @@ Approved 26 November 2026
 
 ## Context
 
-Fans pick matches, and those set their cities, dates, flights, stays and free time. This is a public, worldwide website (later run and hosted by FIFA) that turns "I live here and want these matches" into one continuous trip. The first release runs on your own computer.
+Fans pick matches, and those set their cities, dates, flights, stays and free time. This is a public, worldwide website (later run and hosted by FIFA) that turns "I live here and want these matches" into one continuous trip. The first release was built to run on your own computer and is now also online as a public prototype.
 
 ## Decisions
 
@@ -37,7 +37,7 @@ FIFA will eventually provide a list of approved activities through an API.
 - Trip saved in the browser. No accounts or personal data.
 - A "prototype" label and the sample schedule notice stay on every screen.
 - Group size is entered as adults and children. Very large groups get a notice to split searches.
-- The website isn't hosted online. Its source code is in a public GitHub repository, chosen by the owner on 26 November 2026.
+- The website is public at https://wwc2027-planner.vercel.app (hosted by Vercel), and its source code is in a public GitHub repository. The owner chose to keep both public on 26 November 2026. Changes merged into `main` are expected to publish to the live site.
 
 ## Build order
 

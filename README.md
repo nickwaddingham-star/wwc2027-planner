@@ -1,8 +1,10 @@
 # Women's World Cup 2027 trip planner (prototype)
 
-**This is a prototype, not an official or released FIFA product.** Matches, prices and routes are sample data.
+**This is a prototype, not an official FIFA product.** Matches, prices and routes are sample data.
 FIFA, Qatar Airways and Airbnb names and logos belong to their owners, and this repository grants no right
 to reuse them. See `brand/SOURCES.md`.
+
+Live prototype: https://wwc2027-planner.vercel.app (public, hosted by Vercel).
 
 ## Open it
 
@@ -62,6 +64,6 @@ Open `tests.html`. Every line should say "Pass".
 | Google Maps | Pass |
 | Coach search (Google) | Pass |
 
-## Before public release
+## Before an official release
 
 See `PLAN.md`.

@@ -170,6 +170,20 @@ img.hero-emblem { height: 96px; }
 .activity .field { margin-bottom: 8px; }
 .activity .toggle { margin-top: auto; }
 
+/* FIFA Approved */
+.activity.approved { border: 2px solid var(--fifa-blue); border-top-width: 6px; }
+.approved-badge { background: var(--fifa-blue); color: var(--white); margin-bottom: 8px; }
+.approved-badge small { background: var(--yellow); color: var(--night); border-radius: 99px; padding: 0 7px; font-size: .7rem; }
+
+/* Booking links */
+.book h3 { margin: 18px 0 4px; }
+.book ul.bookings { list-style: none; padding: 0; }
+.booking { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 8px 16px; padding: 10px 0; border-top: 1px solid var(--line); }
+.booking > div:first-child { flex: 1 1 240px; min-width: 0; }
+.booking > div > small { display: block; color: var(--muted); }
+.booking .approved-badge { margin: 0 0 0 6px; vertical-align: middle; }
+.bookactions { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+
 /* Trip */
 .budget { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; margin-bottom: 10px; }
 .budget th { text-align: left; font-weight: 400; }

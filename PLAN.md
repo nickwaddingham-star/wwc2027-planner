@@ -19,6 +19,17 @@ Fans pick matches, and those set their cities, dates, flights, stays and free ti
 | Local testing | Small PowerShell server, execution-policy bypass for that one process only |
 | Branding | FIFA logos and branding, on the owner's confirmation that they may be used. Taken from FIFA's public website |
 | Partner logos | Qatar Airways and Airbnb logos included, on the owner's confirmation, obtained the same way |
+| FIFA Approved activities | Promoted: labelled and listed first. A sample list, marked "Example", until FIFA's API exists |
+| Booking from "Your trip" | Flights on Booking.com (Qatar choices also link to Qatar Airways), accommodation on Airbnb, activities on their own websites |
+
+## FIFA Approved activities (future)
+
+FIFA will eventually provide a list of approved activities through an API.
+
+- **Now:** `js/approved.js` holds a sample list. FIFA has not approved any of these, so each label says "Example" and the page says so.
+- **Later:** the site reads the list from FIFA's API and the "Example" marking is removed.
+- **Needed from FIFA:** API address and access method, the fields returned (activity ID, city, name, booking website, price, dates available), how often the list changes, and terms for showing the "FIFA Approved" label.
+- **To build then:** loading and error states, a stored copy for when the API is unavailable, and matching of FIFA's activities to cities and trip days. A private access key would need a server, which the current site doesn't have.
 
 ## Assumptions
 
@@ -43,6 +54,7 @@ Fans pick matches, and those set their cities, dates, flights, stays and free ti
 ## Before handing to FIFA (later)
 
 - Official fixtures and partner-approved links or data.
+- Replace the sample "FIFA Approved" list with FIFA's API.
 - Approved brand files and guidelines in place of website copies, with written permission from FIFA and each partner.
 - Portuguese, Spanish and other languages.
 - Privacy, cookie and advertising-disclosure review.

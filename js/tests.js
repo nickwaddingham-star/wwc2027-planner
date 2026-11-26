@@ -234,6 +234,25 @@
       sky.includes("/lhr/gru/270622/") && sky.includes("rtn=0"), air + " " + sky);
   });
 
+  const activityKeys = () => Object.entries(WWC.activities).flatMap(([city, list]) => list.map(a => `${city}:${a.id}`));
+
+  test("Approved and website entries match real activities", () => {
+    const keys = activityKeys();
+    const bad = WWC.approved.list.concat(Object.keys(WWC.activitySites)).filter(k => !keys.includes(k));
+    return check(!bad.length, bad.join(", "));
+  });
+
+  test("Every host city has an approved activity, each with a website", () => {
+    const cities = Object.keys(WWC.cities).filter(c => !WWC.approved.list.some(k => k.startsWith(c + ":")));
+    const noSite = WWC.approved.list.filter(k => !WWC.activitySites[k]);
+    return check(!cities.length && !noSite.length, cities.concat(noSite).join(", "));
+  });
+
+  test("Booking.com flight link carries route, date and adults", () => {
+    const url = P.links.bookingFlights("LHR", "GRU", "2027-06-22", 12);
+    return check(url.includes("/LHR.AIRPORT-GRU.AIRPORT/") && url.includes("depart=2027-06-22") && url.includes("adults=9"), url);
+  });
+
   const passed = results.filter(r => r.ok).length;
   WWC.testResults = { passed, total: results.length, failures: results.filter(r => !r.ok) };
   document.getElementById("summary").textContent = `${passed} of ${results.length} tests passed`;

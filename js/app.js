@@ -116,6 +116,10 @@
   const link = (href, label, cls) =>
     `<a class="${cls || "textlink"}" href="${esc(href)}" target="_blank" rel="noopener noreferrer">${esc(label)}<span class="sr"> (${esc(T.newTab)})</span><span aria-hidden="true"> ↗</span></a>`;
 
+  const isApproved = key => WWC.approved.list.includes(key);
+  const approvedBadge = () =>
+    `<span class="badge approved-badge">${esc(T.activities.approved)}${WWC.approved.sample ? `<small>${esc(T.activities.approvedSample)}</small>` : ""}</span>`;
+
   const nextButton = (view, label) => `<p class="next"><a class="button" href="#${view}">${esc(label)}</a></p>`;
   const heading = (title, lead) => `<h1 tabindex="-1">${esc(title)}</h1>${lead ? `<p class="lead">${esc(lead)}</p>` : ""}`;
 
@@ -321,12 +325,15 @@
     const matchesInterest = a => a.tags.filter(t => state.interests.includes(t)).length;
 
     return `${heading(T.activities.title, T.activities.lead)}
+      <p class="callout">${esc(T.activities.approvedNote)}</p>
       <fieldset class="chips"><legend>${esc(T.activities.interests)}</legend>${Object.entries(T.activities.tags).map(([k, label]) =>
         `<button type="button" class="chip" data-action="interest" data-id="${k}" data-focus="interest-${k}" aria-pressed="${state.interests.includes(k)}">${esc(label)}</button>`).join("")}</fieldset>
       ${cities.map(key => {
         const city = WWC.cities[key];
         const visits = stops.filter(s => s.city === key);
-        const items = WWC.activities[key].slice().sort((a, b) => matchesInterest(b) - matchesInterest(a));
+        /* FIFA Approved first, then the closest fit with the visitor's interests. */
+        const promoted = a => (isApproved(`${key}:${a.id}`) ? 1 : 0);
+        const items = WWC.activities[key].slice().sort((a, b) => promoted(b) - promoted(a) || matchesInterest(b) - matchesInterest(a));
         return `<section class="stop"><h2>${esc(city.name)}</h2>
           <p>${visits.map(s => esc(`${day(s.arrive)} to ${day(s.depart)}`)).join(" · ")}</p>
           <p class="hint">${esc(city.weather)} ${esc(city.matchday)}</p>
@@ -343,7 +350,9 @@
               const tag = stop && stop.matches.some(m => m.date === d) ? T.activities.matchDay : stop && !stop.atHome && (d === stop.arrive || d === stop.depart) ? T.activities.travelDay : "";
               return day(d) + (tag ? ` (${tag})` : "");
             };
-            return `<li class="activity${added ? " chosen" : ""}${state.interests.length && matchesInterest(a) ? " liked" : ""}">
+            const site = WWC.activitySites[id];
+            return `<li class="activity${added ? " chosen" : ""}${isApproved(id) ? " approved" : ""}${state.interests.length && matchesInterest(a) ? " liked" : ""}">
+              ${isApproved(id) ? approvedBadge() : ""}
               <h3>${esc(a.name)}</h3>
               <p class="tags">${a.tags.map(t => `<span>${esc(T.activities.tags[t])}</span>`).join("")}</p>
               <p>${esc(a.time)}, ${esc(T.activities.cost(a.cost ? money(a.cost) : ""))}. ${esc(a.note)}</p>
@@ -353,7 +362,7 @@
                 `<option value="${d}"${d === placed.date ? " selected" : ""}>${esc(dayLabel(d))}</option>`).join("")}</select></label>` : ""}
               <button type="button" class="toggle" data-action="activity" data-id="${id}" data-focus="act-${id}" aria-pressed="${added}"
                 ${!added && (!possible || !roomLeft) ? `disabled aria-describedby="why-${key}-${a.id}"` : ""}>${esc(added ? T.activities.remove : T.activities.add)}<span class="sr">: ${esc(a.name)}</span></button>
-              <p class="others">${link(P.links.experiences(city.name), T.activities.experiences)} ${link(P.links.tours(`${a.name} ${city.name}`), T.activities.tours)} ${link(P.links.map(`${a.name} ${city.name}`), T.activities.map)}</p>
+              <p class="others">${link(P.links.experiences(city.name), T.activities.experiences)} ${site ? link(site.url, T.activities.website(site.name)) : ""} ${link(P.links.tours(`${a.name} ${city.name}`), T.activities.tours)}${link(P.links.map(`${a.name} ${city.name}`), T.activities.map)}</p>
             </li>`;
           }).join("")}</ul></section>`;
       }).join("")}
@@ -389,6 +398,52 @@
     });
   }
 
+  /* Booking links for everything in the plan. */
+  function bookingSection(stops, legs, plan) {
+    const item = (title, detail, actions) =>
+      `<li class="booking"><div><strong>${title}</strong><small>${detail}</small></div><div class="bookactions">${actions}</div></li>`;
+    const group = (title, rows, empty) =>
+      `<h3>${esc(title)}</h3>${rows.length ? `<ul class="bookings">${rows.join("")}</ul>` : `<p class="hint">${empty}</p>`}`;
+
+    const flights = legs.filter(j => j.chosen).map(j => {
+      const { chosen, dates } = j;
+      const from = chosen.route[0], to = chosen.route[chosen.route.length - 1];
+      const title = esc(T.flights.route(place(from), place(to)));
+      if (chosen.coach) {
+        return item(title, esc(`${day(dates.depart)}, ${T.flights.coach}`), link(P.links.coach(place(from), place(to)), T.trip.coach, "button"));
+      }
+      return item(title, esc(`${day(dates.depart)}. ${T.trip.bookingRoute(chosen.route.join(" → "))}`),
+        link(P.links.bookingFlights(from, to, dates.depart, state.adults), T.trip.bookingCom, "button") +
+        (chosen.partner ? link(P.links.qatar(), T.trip.orQatar) : ""));
+    });
+
+    const stays = paidStops(stops).map(s => {
+      const city = WWC.cities[s.city], area = areaFor(s.city);
+      return item(esc(`${area.name}, ${city.name}`), esc(T.stays.dates(day(s.arrive), day(s.depart), s.nights)),
+        link(P.links.airbnb(area.place || `${area.name}, ${city.name}`, s.arrive, s.depart, state.adults, state.children, state.roomType), T.trip.airbnb, "button airbnb"));
+    });
+
+    const activities = Object.entries(plan).filter(([, p]) => p.date)
+      .sort((a, b) => a[1].date.localeCompare(b[1].date))
+      .map(([key, p]) => {
+        const site = WWC.activitySites[key];
+        const city = WWC.cities[p.city].name;
+        return item(`${esc(p.item.name)} ${isApproved(key) ? approvedBadge() : ""}`,
+          esc(`${day(p.date)}, ${city}.${site ? "" : " " + T.trip.noWebsite}`),
+          site ? link(site.url, T.activities.website(site.name), "button")
+            : link(P.links.tours(`${p.item.name} ${city}`), T.trip.findTour));
+      });
+
+    const notes = [state.children ? T.trip.bookingChildren : "", state.adults > 9 ? T.trip.bookingGroup : ""].filter(Boolean);
+
+    return `<section class="panel book"><h2>${esc(T.trip.book)}</h2><p class="hint">${esc(T.trip.bookLead)}</p>
+      ${notes.map(n => `<p class="callout">${esc(n)}</p>`).join("")}
+      ${group(T.trip.bookFlights, flights, esc(T.trip.noFlights))}
+      ${group(T.trip.bookStays, stays, esc(T.trip.noStays))}
+      ${group(T.trip.bookActivities, activities, `${esc(T.trip.noActivities)} <a href="#activities">${esc(T.trip.addActivities)}</a>`)}
+    </section>`;
+  }
+
   function tripText(days, totals) {
     return [T.tournament + ": " + T.trip.title, T.notice, ""]
       .concat(days.flatMap(d => [dayLong(d.date)].concat(d.lines.map(l => "  - " + l.text))))
@@ -411,6 +466,7 @@
           <tr class="total"><th scope="row">${esc(T.trip.total)}</th><td>${esc(money(totals.total))}</td></tr>
         </tbody></table>
         <p>${esc(T.trip.perPerson(money(totals.total / guests())))}</p><p class="hint">${esc(T.trip.excludes)}</p></section>
+      ${bookingSection(stops, legs, plan)}
       <section><h2>${esc(T.trip.days)}</h2><ol class="timeline">${days.map(d =>
         `<li><h3>${esc(dayLong(d.date))}</h3><ul>${d.lines.map(l => `<li class="line-${l.type}">${esc(l.text)}</li>`).join("")}</ul></li>`).join("")}</ol></section>
       <section class="panel"><h2>${esc(T.trip.before)}</h2><ul>${T.trip.checks.map(c => `<li>${esc(c)}</li>`).join("")}</ul></section>

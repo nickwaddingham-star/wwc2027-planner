@@ -270,6 +270,9 @@ WWC.planner = (function () {
     skyscanner: (from, to, date, adults) =>
       `https://www.skyscanner.net/transport/flights/${from.toLowerCase()}/${to.toLowerCase()}/${yymmdd(date)}/?adultsv2=${Math.min(adults, 8)}&rtn=0`,
     qatar: () => "https://www.qatarairways.com/en/homepage.html",
+    /* Adults only: Booking.com needs each child's age, which the planner doesn't ask for. */
+    bookingFlights: (from, to, date, adults) =>
+      `https://flights.booking.com/flights/${from}.AIRPORT-${to}.AIRPORT/?type=ONEWAY&from=${from}.AIRPORT&to=${to}.AIRPORT&depart=${date}&adults=${Math.min(adults, 9)}&cabinClass=ECONOMY`,
     coach: (from, to) => `https://www.google.com/search?q=${q(`bus ${from} to ${to} tickets`)}`,
     airbnb: (place, checkin, checkout, adults, children, type) => {
       const slug = place.split(",").map(s => q(s.trim().replace(/ /g, "-"))).join("--");

@@ -24,6 +24,8 @@ Then visit http://localhost:8765/. The bypass applies to that one process only.
 - **Qatar Airways destinations:** from Wikipedia's destination list, read 26 November 2026.
 - **Currency rates:** rough figures set on 26 November 2026.
 - **Neighbourhood and activity notes:** general descriptions that need checking by an editor.
+- **"FIFA Approved" labels:** examples only. FIFA has not approved any of these activities.
+- **Activity websites:** opened and checked on 26 November 2026. Activities without one link to a tour search.
 
 ## Where to change things
 
@@ -33,6 +35,7 @@ Then visit http://localhost:8765/. The bypass applies to that one process only.
 | Airports, routes, home cities | `js/airports.js` |
 | Screen text | `js/strings.js` |
 | Logo files | `js/brand.js` |
+| FIFA Approved list and activity websites | `js/approved.js` |
 | Colours and type | top of `styles.css` |
 | Ranking, Qatar rule, dates, search links | `js/planner.js` |
 
@@ -53,7 +56,8 @@ Open `tests.html`. Every line should say "Pass".
 | Qatar Airways | Opens the home page only. The planner shows what to enter |
 | Airbnb stays | Pass: area, dates and entire-home filter filled in, and guests where checked |
 | Airbnb Experiences | Pass: opens the city. No dates |
-| Booking.com | Pass: area, dates, guests and rooms filled in |
+| Booking.com stays | Pass: area, dates, guests and rooms filled in |
+| Booking.com flights | Pass: London to São Paulo filled in with date and travellers. Children are left out because ages are needed |
 | GetYourGuide search address | Fail: ignored the query. Replaced with a Google search of its pages, which passed |
 | Google Maps | Pass |
 | Coach search (Google) | Pass |

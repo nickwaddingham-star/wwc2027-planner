@@ -607,8 +607,30 @@
       <p class="fine">${esc(A.demo)} ${esc(A.privacy)}</p>`;
   }
 
+  const icon = path => `<svg class="icon" viewBox="0 0 24 24" aria-hidden="true">${path}</svg>`;
+  const ICONS = {
+    globe: '<circle cx="12" cy="12" r="9"></circle><path d="M3 12h18M12 3c2.5 2.6 3.7 5.6 3.7 9S14.500 18.400 12 21c-2.500-2.600-3.700-5.600-3.700-9S9.500 5.600 12 3z"></path>',
+    search: '<circle cx="10.5" cy="10.5" r="6.5"></circle><path d="M15.5 15.5L21 21"></path>',
+    person: '<circle cx="12" cy="12" r="9"></circle><circle cx="12" cy="10" r="3"></circle><path d="M6.2 18.4c1.4-2.2 3.4-3.2 5.8-3.2s4.4 1 5.8 3.2"></path>'
+  };
+
   function accountLink() {
-    el("account").innerHTML = `<a href="#account"${currentView() === "account" ? ' aria-current="page"' : ""}>${esc(session.user ? A.linkIn(session.user.name) : A.linkOut)}</a>`;
+    el("account").innerHTML = `<a class="accountlink" href="#account"${currentView() === "account" ? ' aria-current="page"' : ""}>${icon(ICONS.person)}<span>${esc(session.user ? A.linkIn(session.user.name) : A.linkOut)}</span></a>`;
+  }
+
+  const TOURNAMENT = "https://www.fifa.com/en/tournaments/womens/womensworldcup/brazil-2027";
+
+  /* The two-level bar across the top, which doesn't change as the visitor moves around. */
+  function header() {
+    const list = items => `<ul>${items.map(([label, href]) => `<li><a href="${esc(href)}">${esc(label)}</a></li>`).join("")}</ul>`;
+    el("brand-fifa").innerHTML = `<a class="brandlink" href="https://www.fifa.com/" aria-label="${esc(T.fifaHome)}">${logo("fifa")}</a>`;
+    el("fifa-links").innerHTML = list(T.fifaLinks);
+    el("fifa-links").setAttribute("aria-label", T.fifaLinksLabel);
+    el("language").innerHTML = `${icon(ICONS.globe)}<span>${esc(T.language)}</span>`;
+    el("search").innerHTML = `<a class="iconlink" href="${TOURNAMENT}?searchOverlay=1" aria-label="${esc(T.searchFifa)}">${icon(ICONS.search)}</a>`;
+    el("brand-event").innerHTML = `<a class="eventname" href="${TOURNAMENT}"><span class="sr">${esc(T.tournamentHome)}: </span>${logo("emblem")}<strong>${esc(T.eventTitle)}</strong></a>`;
+    el("event-nav").innerHTML = list(T.eventLinks.map(([label, path]) => [label, `${TOURNAMENT}/${path}`]));
+    el("event-nav").setAttribute("aria-label", T.eventNavLabel);
   }
 
   /* A message that stays until the visitor moves to another screen. */
@@ -972,11 +994,7 @@
     el("main").focus();
   });
 
-  el("brand-fifa").innerHTML = logo("fifa");
-  el("brand-emblem").innerHTML = logo("emblem");
-  el("fifa-page").innerHTML = link("https://www.fifa.com/en/tournaments/womens/womensworldcup/brazil-2027", T.fifaPage);
-  el("tournament").textContent = T.tournament;
-  el("sitename").textContent = T.siteName;
+  header();
   el("prototype").textContent = T.prototype;
   el("notice").textContent = T.notice;
   el("countdown").setAttribute("aria-label", T.countdown.label);

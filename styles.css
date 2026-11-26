@@ -50,18 +50,30 @@ a { color: var(--accent); }
 .skip:focus { top: 8px; }
 .wrap { max-width: 1440px; margin: 0 auto; padding-inline: var(--gutter); }
 
-/* Header */
-.topbar { background: var(--fifa-blue); color: var(--white); }
-.topbar .wrap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; min-height: 40px; padding-block: 4px; }
-.topright { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 4px 16px; min-width: 0; font-size: 12px; }
-.topright a { color: var(--white); text-decoration: none; padding: 4px; overflow-wrap: anywhere; }
+/* Two-level header, laid out like the bar on FIFA's tournament pages */
+.siteheader { position: sticky; top: 0; z-index: 5; color: var(--white); }
+.siteheader a { color: var(--white); text-decoration: none; }
+.siteheader :focus-visible { outline-offset: -3px; }
+.topbar { background: var(--fifa-blue); }
+.topbar .wrap { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 24px; min-height: 40px; }
+.brandlink { display: inline-flex; align-items: center; min-height: 32px; }
+.topright { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 4px 20px; min-width: 0; font-size: 12px; }
+.fifalinks ul { display: flex; flex-wrap: wrap; gap: 4px; }
+.fifalinks a { display: block; padding: 4px 8px; border-radius: 4px; }
 .topright a:hover, .topright a[aria-current] { text-decoration: underline; }
+.lang { display: inline-flex; align-items: center; gap: 8px; padding-inline: 20px; border-inline: 1px solid rgba(255, 255, 255, .3); font-size: 14px; }
+.icon { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.6; flex: none; }
+.iconlink { display: inline-flex; padding: 6px; }
+.accountlink { display: inline-flex; align-items: center; gap: 6px; padding: 4px 0; overflow-wrap: anywhere; }
 .prototype { background: var(--yellow); color: var(--night); font-weight: 600; padding: 2px 12px; border-radius: 99px; }
-.eventbar { background: var(--event-blue); color: var(--white); position: sticky; top: 0; z-index: 5; }
-.eventbar .wrap { display: flex; flex-wrap: wrap; align-items: center; column-gap: 32px; min-height: 64px; }
-.eventname { display: flex; align-items: center; gap: 12px; padding-block: 8px; font-size: 12px; line-height: 1.3; }
-.eventname strong { display: block; font-weight: 500; text-transform: uppercase; }
-.eventname small { font-size: 12px; text-transform: uppercase; }
+.eventbar { background: var(--event-blue); }
+.eventbar .wrap { display: flex; flex-wrap: wrap; align-items: center; column-gap: 40px; min-height: 64px; }
+.eventname { display: flex; align-items: center; gap: 16px; padding-block: 8px; }
+.eventname strong { max-width: 14rem; font-weight: 500; font-size: 14px; line-height: 1.3; text-transform: uppercase; }
+.eventnav { min-width: 0; max-width: 100%; }
+.eventnav ul { display: flex; overflow-x: auto; gap: 4px; }
+.eventnav a { display: block; padding: 10px 14px; white-space: nowrap; font-size: 16px; border-radius: 4px; }
+.eventnav a:hover { background: rgba(255, 255, 255, .14); }
 .notice { background: var(--night); color: var(--white); font-size: 13px; }
 .notice .wrap { padding-block: 6px; }
 .logo { display: inline-flex; align-items: center; }
@@ -72,12 +84,12 @@ img.logo-airbnb { height: 36px; }
 .placeholder { border: 1.5px dashed currentColor; padding: 2px 8px; font-weight: 600; font-size: .75rem; gap: 3px; }
 .placeholder small { font-weight: 400; }
 
-/* Steps, inside the blue bar */
-.steps { min-width: 0; max-width: 100%; }
-.steps ol { display: flex; overflow-x: auto; gap: 28px; position: relative; }
-.steps a { display: block; padding: 20px 0 17px; color: var(--white); text-decoration: none; white-space: nowrap; border-bottom: 3px solid transparent; font-size: 15px; }
-.steps a:hover { border-bottom-color: var(--white); }
-.steps a[aria-current] { color: var(--yellow); border-bottom-color: var(--yellow); }
+/* Planning steps, under the countdown */
+.steps { background: var(--surface); border-bottom: 1px solid var(--line); }
+.steps ol { display: flex; overflow-x: auto; gap: 32px; position: relative; }
+.steps a { display: block; padding: 17px 0 14px; color: var(--night); text-decoration: none; white-space: nowrap; border-bottom: 3px solid transparent; font-size: 15px; }
+.steps a:hover { border-bottom-color: var(--line); }
+.steps a[aria-current] { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; }
 .steps :focus-visible { outline-offset: -3px; }
 
 /* Countdown band */
@@ -96,7 +108,7 @@ img.logo-airbnb { height: 36px; }
 .layout.full { grid-template-columns: minmax(0, 1fr); }
 main, .column { min-width: 0; }
 main:focus { outline: none; }
-aside { background: var(--surface); padding: 20px; position: sticky; top: 84px; max-height: calc(100vh - 100px); overflow-y: auto; }
+aside { background: var(--surface); padding: 20px; position: sticky; top: 124px; max-height: calc(100vh - 140px); overflow-y: auto; }
 aside h2 { font-size: 1.4rem; }
 section { margin-bottom: 40px; }
 .lead { font-size: 1.05rem; color: var(--muted); max-width: 62ch; }
@@ -309,13 +321,24 @@ footer img.logo-airbnb { height: 46px; }
 .footlabel { text-transform: uppercase; letter-spacing: .04em; }
 .footnote { align-self: stretch; border-top: 1px solid #8c86f2; padding-top: 16px; margin: 0; display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px 24px; }
 
+/* Below this width the header wraps, so it scrolls away instead of covering the page. */
+@media (max-width: 1200px) {
+  .siteheader { position: static; }
+  aside { top: 20px; max-height: calc(100vh - 40px); }
+  .eventnav { flex: 1 1 100%; }
+  .eventnav a { padding-inline: 10px; font-size: 14px; }
+}
 @media (max-width: 960px) {
   .layout { grid-template-columns: minmax(0, 1fr); }
   aside { position: static; max-height: none; }
   aside .map { max-width: 440px; margin: 0 auto; }
-  .eventbar { position: static; }
-  .steps { flex: 1 1 100%; }
-  .steps a { padding: 10px 0 9px; }
+  .steps a { padding: 12px 0 9px; }
+}
+@media (max-width: 640px) {
+  .fifalinks { order: 2; flex: 1 1 100%; }
+  .fifalinks ul { flex-wrap: nowrap; overflow-x: auto; }
+  .fifalinks a { white-space: nowrap; }
+  .lang { display: none; }
 }
 @media (max-width: 560px) {
   .hero { flex-direction: column; align-items: flex-start; }

@@ -13,9 +13,30 @@ window.WWC = window.WWC || {};
     notice: "Sample schedule, not official. Fares, stay prices and routes are estimates. “FIFA Approved” labels are examples.",
     skip: "Skip to content",
     logos: { fifa: "FIFA", emblem: "Tournament emblem", qatar: "Qatar Airways", airbnb: "Airbnb" },
-    steps: { start: "Home", matches: "Matches", flights: "Flights", stays: "Stays", activities: "Activities", trip: "Your trip", account: "My trips" },
+    steps: { start: "Start Trip",matches: "Matches", flights: "Flights", stays: "Stays", activities: "Activities", trip: "Your trip", account: "My trips" },
     stepsLabel: "Planning steps",
-    fifaPage: "FIFA tournament page",
+    eventTitle: "FIFA Women’s World Cup 2027™",
+    language: "English",
+    searchFifa: "Search FIFA.com",
+    fifaHome: "FIFA home page",
+    tournamentHome: "Tournament home page",
+    fifaLinksLabel: "FIFA sites",
+    eventNavLabel: "Tournament",
+    /* Pages on FIFA's own sites, as linked from its tournament pages on 26 November 2026. */
+    fifaLinks: [
+      ["FIFA Rewards", "https://www.fifa.com/en/rewards"],
+      ["FIFA+", "https://www.plus.fifa.com/"],
+      ["FIFA Store", "https://store.fifa.com/"],
+      ["FIFA Collect", "https://collect.fifa.com/"]
+    ],
+    eventLinks: [
+      ["Qualifiers", "qualifiers"],
+      ["Key details", "articles/everything-you-need-to-know"],
+      ["Host Cities", "host-cities"],
+      ["Tickets & Hospitality", "tickets"],
+      ["Volunteers", "volunteers"],
+      ["Organisation", "organisation"]
+    ],
     countdown: { label: "Countdown and your plan", dates: "24 June – 25 July 2027", days: "days to go", matches: "your matches", nights: "your nights" },
     footerPartners: "FIFA Partners",
     footerSupporters: "Supporters",

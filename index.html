@@ -11,13 +11,26 @@
 </head>
 <body>
   <a class="skip" href="#main">Skip to content</a>
-  <header class="topbar"><div class="wrap"><span id="brand-fifa"></span><span class="topright"><span id="fifa-page"></span><span id="account"></span><span class="prototype" id="prototype"></span></span></div></header>
-  <div class="eventbar"><div class="wrap">
-    <span class="eventname"><span id="brand-emblem"></span><span><strong id="tournament"></strong><small id="sitename"></small></span></span>
-    <nav class="steps"><ol id="steps"></ol></nav>
-  </div></div>
-  <div class="notice"><div class="wrap" id="notice"></div></div>
+  <!-- The two-level bar follows the one on fifa.com's tournament pages. -->
+  <header class="siteheader">
+    <div class="topbar"><div class="wrap">
+      <span id="brand-fifa"></span>
+      <div class="topright">
+        <nav class="fifalinks" id="fifa-links"></nav>
+        <span class="lang" id="language"></span>
+        <span id="search"></span>
+        <span id="account"></span>
+        <span class="prototype" id="prototype"></span>
+      </div>
+    </div></div>
+    <div class="eventbar"><div class="wrap">
+      <span id="brand-event"></span>
+      <nav class="eventnav" id="event-nav"></nav>
+    </div></div>
+  </header>
   <section class="countdown" id="countdown"></section>
+  <nav class="steps"><div class="wrap"><ol id="steps"></ol></div></nav>
+  <div class="notice"><div class="wrap" id="notice"></div></div>
   <div class="wrap layout" id="layout">
     <div class="column">
       <p id="flash" class="flash" role="status"></p>

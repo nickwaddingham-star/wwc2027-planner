@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Screen tests</title>
+  <link rel="icon" href="data:,">
+  <style>
+    body { font: 14px/1.5 system-ui, sans-serif; margin: 24px; }
+    li.fail { color: #b00020; font-weight: 600; }
+    li.pass { color: #1b6e3c; }
+    iframe { border: 1px solid #ccc; display: block; margin-top: 16px; }
+  </style>
+</head>
+<body>
+  <h1 id="summary">Running…</h1>
+  <p>These tests drive the planner below. Your own plan and saved trips in this browser are put aside while they run, then put back. Close other planner tabs first, and let the run finish.</p>
+  <ul id="results"></ul>
+  <div id="stage"></div>
+  <script src="js/screen-tests.js"></script>
+</body>
+</html>

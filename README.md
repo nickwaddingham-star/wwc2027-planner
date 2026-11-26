@@ -57,7 +57,17 @@ Qatar Airways moves to the top only when its journey is no more than 25% longer 
 
 ## Test
 
-Open `tests.html`. Every line should say "Pass".
+| Page | What it tests |
+|---|---|
+| `tests.html` | Data, trip dates, flight ranking, activities, search links and saved trips |
+| `screens.html` | Screens loading, the full journey, booking links, required labels, safety of typed names and missing files |
+
+Open each through the local web server (double-clicking does not work for `screens.html`).
+Every line should say "Pass".
+
+GitHub runs both pages, plus a check for private data and missing files (`.github/scripts/check-files.mjs`),
+on every pull request and every change to `main`. A pull request can't be merged until the `tests` check passes.
+Vercel publishes `main` on its own, so this rule on merging is what keeps failing changes off the live site.
 
 ## Search links, checked 26 November 2026
 

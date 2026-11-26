@@ -1,0 +1,35 @@
+name: Tests
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # The branch protection rule on main requires a check with this name.
+  tests:
+    name: tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+      - name: Check files
+        run: node .github/scripts/check-files.mjs
+      - name: Install the browser driver
+        run: npm install --no-save --no-package-lock --ignore-scripts playwright-core@1.55.0
+      - name: Run logic and screen tests
+        run: node .github/scripts/run-tests.mjs

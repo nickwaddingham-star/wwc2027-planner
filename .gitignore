@@ -4,6 +4,9 @@ desktop.ini
 .DS_Store
 .vscode/
 
+# Installed by the automated test run
+node_modules/
+
 # Local secrets, should any be added later
 .env
 .env.*

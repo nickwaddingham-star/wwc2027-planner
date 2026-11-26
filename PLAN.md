@@ -83,6 +83,8 @@ Tests: save several trips, reopen each, rename, update, delete, sign out and bac
 | 6 | End-to-end tests from five continents, phone and desktop, keyboard only |
 | 7 | Demo sign-in and saved trips (built) |
 | 8 | Automated tests on every pull request, required before merging into `main` (built) |
+| 9 | Credited photos for the nine promoted activities (built) |
+| Later | Photos for the other activities |
 | Later | Tests for budget totals, countdown and headlines, phone width and keyboard use; a weekly check of external links |
 
 ## Before handing to FIFA (later)

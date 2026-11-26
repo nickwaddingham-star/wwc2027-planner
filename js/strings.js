@@ -229,6 +229,8 @@ window.WWC = window.WWC || {};
       approvedSample: "Example",
       approvedNote: "FIFA Approved activities are listed first. These labels are examples only: FIFA hasn’t approved any activity yet. The official list will come from FIFA.",
       website: name => `Visit ${name} website`,
+      photoBy: "Photo:",
+      cropped: "cropped",
       next: "View your trip"
     },
 
